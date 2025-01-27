@@ -17,5 +17,6 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # external build triggered from this build file.
 set(onnxruntime_bundled_libraries
   "${CMAKE_CURRENT_SOURCE_DIR}/onnxruntime.dll"
+  "${CMAKE_CURRENT_SOURCE_DIR}/ortextensions.dll"
   PARENT_SCOPE
 )

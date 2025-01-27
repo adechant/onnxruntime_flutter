@@ -270,8 +270,9 @@ class OrtSession {
 class OrtSessionOptions {
   late ffi.Pointer<bg.OrtSessionOptions> _ptr;
   int _intraOpNumThreads = 0;
+  final bool onnxruntimeExtensionsEnabled;
 
-  OrtSessionOptions() {
+  OrtSessionOptions({this.onnxruntimeExtensionsEnabled = false}) {
     _create();
   }
 
@@ -284,6 +285,26 @@ class OrtSessionOptions {
     OrtStatus.checkOrtStatus(statusPtr);
     _ptr = pp.value;
     calloc.free(pp);
+
+    if (onnxruntimeExtensionsEnabled) {
+      try {
+        extDylib;
+        final libraryHandle = calloc<ffi.Pointer<ffi.Void>>();
+        final utf8Path = ortExtensionsDylibPath.toNativeUtf8().cast<ffi.Char>();
+        final statusPtr = OrtEnv.instance.ortApiPtr.ref.RegisterCustomOpsLibrary
+                .asFunction<
+                    bg.OrtStatusPtr Function(
+                        ffi.Pointer<bg.OrtSessionOptions>,
+                        ffi.Pointer<ffi.Char>,
+                        ffi.Pointer<ffi.Pointer<ffi.Void>>)>()(
+            _ptr, utf8Path, libraryHandle);
+        OrtStatus.checkOrtStatus(statusPtr);
+        calloc.free(libraryHandle);
+      } catch (e) {
+        print('Error loading ORT Extensions: $e');
+        rethrow;
+      }
+    }
   }
 
   void release() {
